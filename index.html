@@ -2,6 +2,7 @@
 <html>
   <head>
     <title>Socket.IO chat</title>
+		<link href="style.css" rel="stylesheet" type="text/css" />
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
@@ -12,6 +13,13 @@
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
       #messages { margin-bottom: 40px }
+			.user1 {
+				color: blue;
+			}
+			.user2 {
+				color: red;
+			}
+
     </style>
   </head>
   <body>
@@ -22,17 +30,38 @@
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
+			let userNumber = 0;
       $(function () {
         var socket = io();
+
         $('form').submit(function(){
-          socket.emit('chat message', $('#m').val());
-          $('#m').val('');
+					socket.emit('chat message', {
+						text: $('#m').val(),
+						user: userNumber,
+					});
+					$('#m').val('');
           return false;
         });
+
+				socket.on('setUserNumber', num => {
+					userNumber = num;
+				});
+
+				socket.on('history', function(msgHistory) {
+					msgHistory.forEach(msg => {
+						$('#messages').append($('<li>', {'class': `user${msg.user}`}).text(msg.text));
+						window.scrollTo(0, document.body.scrollHeight);
+					});
+				});
+
         socket.on('chat message', function(msg){
-          $('#messages').append($('<li>').text(msg));
+					$('#messages').append($('<li>', {'class': `user${msg.user}`}).text(msg.text));
           window.scrollTo(0, document.body.scrollHeight);
         });
+
+				socket.on('disconnect', () => {
+					document.write('Sorry, you\'ve been replaced.');
+				});
       });
     </script>
   </body>
